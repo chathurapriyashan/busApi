@@ -1,17 +1,45 @@
-import { verifyToken } from './middleware';
-import { v4 as uuidv4 } from 'uuid';
+const { v4 : uuidv4 } = require('uuid');
+const { saveTicket } = require('../Controllers/DBController');
 
-const tickets = [];
+exports.generateTickets =async function(req ,res){
+    console.log("from gererate tickets");
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
+    try{
+        const { 
+            price,
+            startLocation, 
+            endLocation,
+            paymentMethod,
+        } = req.body;
 
-  const user = verifyToken(req);
-  if (!user) return res.status(401).json({ message: 'Unauthorized' });
+        const data = await saveTicket({
+            price , 
+            startLocation , 
+            endLocation ,
+            paymentMethod ,
+            token :uuidv4(),
+        });
 
-  const { from, to, price } = req.body;
-  const ticket = { id: uuidv4(), user: user.email, from, to, price };
-  tickets.push(ticket);
+        return res.status(201).json({
+            status:"success",
+            data:{
+                tickets:[
+                    {
+                        id:data.id,
+                        token: data.token,
+                        price : data.price,
+                        startLocation : data.startLocation,
+                        endLocation : data.endLocation,
+                    }
+                ]
+            },
+                paymentMethod : data.paymentMethod,
+                isPaid:true,
+        })
 
-  res.status(201).json(ticket);
+
+    }catch(error){
+        console.log(error);
+    }
+
 }

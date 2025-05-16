@@ -1,16 +1,10 @@
-import { verifyToken } from './middleware';
+const { getAllTicketsData } = require("../Controllers/DBController")
 
-const tickets = []; // Same array as in create-ticket
+exports.getAllTicketsHandler = async function(req, res) {
+    const ticketsData = (await getAllTicketsData());
 
-export default function handler(req, res) {
-  if (req.method !== 'GET') return res.status(405).end();
-
-  const user = verifyToken(req);
-  if (!user) return res.status(401).json({ message: 'Unauthorized' });
-
-  const { id } = req.query;
-  const ticket = tickets.find(t => t.id === id);
-  if (!ticket) return res.status(404).json({ message: 'Not found' });
-
-  res.status(200).json(ticket);
+  return res.status(200).json({
+    status:"success",
+    data: ticketsData,
+  })
 }

@@ -1,13 +1,40 @@
-import bcrypt from 'bcryptjs';
+const bcrypt = require('bcryptjs');
+const { saveUser } = require('../Controllers/DBController');
+const jwt = require('jsonwebtoken');
+const { signToken } = require('../middleware/auth');
 
-const users = []; // Use a DB in production
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
 
-  const { email, password } = req.body;
-  const hashed = await bcrypt.hash(password, 10);
-  users.push({ email, password: hashed });
+// You should store this in an environment variable
 
-  res.status(201).json({ message: 'User created' });
-}
+
+exports.signUp = async function(req, res) {
+    const { email, password } = req.body;
+
+    // Hash the password
+    const hashed = await bcrypt.hash(password, 10);
+
+    // Save the user (your function to store it somewhere)
+    const user = await saveUser({
+        email,
+        password: hashed,
+    });
+
+    // Generate JWT token
+    const token = signToken({email:user.email});
+
+    // Set token as HTTP-only cookie
+    res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // set to true in prod
+        sameSite: 'strict',
+        maxAge: 3600000, // 1 hour
+    });
+
+    res.status(201).json({
+        status:"sucess",
+        message: 'User created',
+        data: user,
+        token,
+    });
+};
