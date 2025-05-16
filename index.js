@@ -8,7 +8,7 @@ initDB();
 
 app.use(express.json());
 
-const server = app.listen( 3000, (error)=>{
+const server = app.listen( 3000, "0.0.0.0", (error)=>{
     if(error){
         console.log(error);
         return;
